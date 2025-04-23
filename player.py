@@ -1,9 +1,16 @@
 from circleshape import *
 from constants import *
+import pygame
 
-class Player(CircleShape):
+class Player(CircleShape, pygame.sprite.Sprite):
+    containers = None  # Bude nastaveno později
+
     def __init__(self, x, y):
-        super().__init__(x, y, PLAYER_RADIUS)
+        CircleShape.__init__(self, x, y, PLAYER_RADIUS)
+        pygame.sprite.Sprite.__init__(self)
+        if self.containers:
+            for container in self.containers:
+                container.add(self)
         self.rotation = 0
     
     def triangle(self):
