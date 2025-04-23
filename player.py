@@ -2,6 +2,7 @@ from circleshape import *
 from constants import *
 import pygame
 from shot import Shot
+
 class Player(CircleShape, pygame.sprite.Sprite):
     containers = None  # Bude nastaveno později
 
@@ -12,6 +13,7 @@ class Player(CircleShape, pygame.sprite.Sprite):
             for container in self.containers:
                 container.add(self)
         self.rotation = 0
+        self.shot_timer = SHOT_COOLDOWN  # Inicializace časovače
     
     def triangle(self):
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
@@ -39,12 +41,17 @@ class Player(CircleShape, pygame.sprite.Sprite):
         if keys[pygame.K_s]:
             self.move(-dt)
         if keys[pygame.K_SPACE]:
-            self.shoot()
+            self.shoot(dt)
 
     def move(self, dt):
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
         self.position += forward * PLAYER_SPEED * dt
     
-    def shoot(self):
-        shot = Shot(self.position, self.rotation, SHOT_RADIUS)
-        shot.velocity = pygame.Vector2(0, 1).rotate(self.rotation) * PLAYER_SHOT_SPEED
+    def shoot(self, dt):
+        self.shot_timer += dt
+        if self.shot_timer >= SHOT_COOLDOWN:
+            shot = Shot(self.position, self.rotation, SHOT_RADIUS)
+            shot.velocity = pygame.Vector2(0, 1).rotate(self.rotation) * PLAYER_SHOT_SPEED
+            self.shot_timer = 0
+        else:
+            self.shot_timer += dt

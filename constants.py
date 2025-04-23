@@ -11,3 +11,4 @@ PLAYER_ROTATION_SPEED = 300  # stupňů za sekundu
 PLAYER_SPEED = 200  # pixelů za sekundu
 SHOT_RADIUS = 5
 PLAYER_SHOT_SPEED = 500  # pixelů za sekundu
+SHOT_COOLDOWN = 0.3  # sekundy
