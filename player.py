@@ -53,5 +53,3 @@ class Player(CircleShape, pygame.sprite.Sprite):
             shot = Shot(self.position, self.rotation, SHOT_RADIUS)
             shot.velocity = pygame.Vector2(0, 1).rotate(self.rotation) * PLAYER_SHOT_SPEED
             self.shot_timer = 0
-        else:
-            self.shot_timer += dt

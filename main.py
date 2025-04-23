@@ -29,6 +29,14 @@ def main():
             updatable_object.update(dt)
         for drawable_object in drawable:
             drawable_object.draw(screen)
+        # Procházíme kopii seznamu shots, protože během iterace měníme obsah
+        for shot in list(shots):
+            # Procházíme kopii seznamu asteroids, protože během iterace měníme obsah
+            for asteroid in list(asteroids):
+                if shot.check_collision(asteroid):
+                    shot.pygame.sprite.Sprite.kill()
+                    asteroid.pygame.sprite.Sprite.kill()
+                    break  # Ukončíme vnitřní smyčku, protože střela už nemůže zasáhnout další asteroid
         for asteroid in asteroids:
             if player.check_collision(asteroid):
                 print("Game over!")
