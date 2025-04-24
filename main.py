@@ -6,6 +6,7 @@ from player import Player
 from asteroid import Asteroid
 from asteroidfield import AsteroidField
 from shot import Shot
+from background import StarBackground
 
 # Konstanty pro bodování
 SCORE_PER_SECOND = 1
@@ -62,6 +63,9 @@ def main():
     highscore = load_highscore()
     game_time = 0
     
+    # Inicializace hvězdného pozadí
+    background = StarBackground()
+    
     Player.containers = (updatable, drawable)
     Asteroid.containers = (asteroids, updatable, drawable)
     AsteroidField.containers = (updatable,)
@@ -79,8 +83,13 @@ def main():
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE and shoot_sound:
                     shoot_sound.play()
+                elif event.key == pygame.K_ESCAPE:
+                    return
         
         screen.fill((0, 0, 0))
+        # Vykreslení hvězdného pozadí
+        background.draw(screen)
+        
         for updatable_object in updatable:
             updatable_object.update(dt)
         for drawable_object in drawable:

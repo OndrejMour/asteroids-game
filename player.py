@@ -24,7 +24,102 @@ class Player(CircleShape, pygame.sprite.Sprite):
         return [a, b, c]
 
     def draw(self, screen):
-        pygame.draw.polygon(screen, (0, 255, 0), self.triangle())
+        # Kreslení trupu
+        self._draw_body(screen)
+        # Kreslení křídel
+        self._draw_wings(screen)
+        # Kreslení motorů
+        self._draw_engines(screen)
+        # Kreslení kokpitu
+        self._draw_cockpit(screen)
+
+    def _draw_body(self, screen):
+        # Trup lodi - prodloužený a užší
+        body_length = self.radius * 2
+        body_width = self.radius * 0.4
+        
+        # Hlavní část trupu
+        body_points = [
+            self.position + pygame.Vector2(0, -body_length).rotate(self.rotation),  # Předek
+            self.position + pygame.Vector2(-body_width, body_length * 0.5).rotate(self.rotation),  # Levý zadní
+            self.position + pygame.Vector2(body_width, body_length * 0.5).rotate(self.rotation),   # Pravý zadní
+        ]
+        pygame.draw.polygon(screen, (220, 220, 220), body_points)  # Světlejší šedá pro trup
+
+    def _draw_wings(self, screen):
+        wing_length = self.radius * 2.0  # Delší křídla
+        wing_width = self.radius * 0.4   # Širší křídla
+        wing_offset = self.radius * 0.6  # Větší odsazení od středu
+        
+        # Funkce pro kreslení jednoho křídla
+        def draw_single_wing(base_pos, angle):
+            # Základní tvar křídla
+            wing_points = [
+                base_pos + pygame.Vector2(-wing_width/2, -wing_length).rotate(angle),
+                base_pos + pygame.Vector2(wing_width/2, -wing_length).rotate(angle),
+                base_pos + pygame.Vector2(wing_width/2, wing_length/4).rotate(angle),  # Kratší zadní část
+                base_pos + pygame.Vector2(-wing_width/2, wing_length/4).rotate(angle)  # Kratší zadní část
+            ]
+            # Světlejší šedá pro křídla
+            pygame.draw.polygon(screen, (200, 200, 200), wing_points)
+            pygame.draw.polygon(screen, (100, 100, 100), wing_points, 2)  # Tmavší obrys
+            
+            # Červený konec křídla - výraznější a větší
+            tip_length = wing_length * 0.3  # Delší červená část
+            tip_points = [
+                base_pos + pygame.Vector2(-wing_width/2, -wing_length).rotate(angle),
+                base_pos + pygame.Vector2(wing_width/2, -wing_length).rotate(angle),
+                base_pos + pygame.Vector2(wing_width/2, -wing_length + tip_length).rotate(angle),
+                base_pos + pygame.Vector2(-wing_width/2, -wing_length + tip_length).rotate(angle)
+            ]
+            pygame.draw.polygon(screen, (255, 30, 30), tip_points)  # Jasnější červená
+            
+            # Přidání zbraňového systému
+            gun_pos = base_pos + pygame.Vector2(0, -wing_length * 0.7).rotate(angle)
+            pygame.draw.circle(screen, (50, 50, 50), (int(gun_pos.x), int(gun_pos.y)), int(wing_width * 0.3))
+        
+        # Kreslení všech křídel
+        left_pos = self.position + pygame.Vector2(-wing_offset, 0).rotate(self.rotation)
+        right_pos = self.position + pygame.Vector2(wing_offset, 0).rotate(self.rotation)
+        
+        # Nejdřív nakreslíme zadní křídla
+        draw_single_wing(left_pos, self.rotation + 180)
+        draw_single_wing(right_pos, self.rotation + 180)
+        # Pak přední křídla, aby byla "nahoře"
+        draw_single_wing(left_pos, self.rotation)
+        draw_single_wing(right_pos, self.rotation)
+
+    def _draw_engines(self, screen):
+        engine_radius = self.radius * 0.2  # Větší motory
+        wing_offset = self.radius * 0.6    # Odpovídá odsazení křídel
+        
+        engine_positions = [
+            self.position + pygame.Vector2(-wing_offset, self.radius/4).rotate(self.rotation),
+            self.position + pygame.Vector2(wing_offset, self.radius/4).rotate(self.rotation),
+            self.position + pygame.Vector2(-wing_offset, -self.radius/4).rotate(self.rotation),
+            self.position + pygame.Vector2(wing_offset, -self.radius/4).rotate(self.rotation)
+        ]
+        
+        for pos in engine_positions:
+            # Vnější kruh motoru - tmavší
+            pygame.draw.circle(screen, (60, 60, 60), (int(pos.x), int(pos.y)), int(engine_radius))
+            # Vnitřní kruh motoru - jasnější modrá
+            pygame.draw.circle(screen, (50, 150, 255), (int(pos.x), int(pos.y)), int(engine_radius * 0.6))
+
+    def _draw_cockpit(self, screen):
+        cockpit_length = self.radius * 0.6
+        cockpit_width = self.radius * 0.3
+        cockpit_pos = self.position + pygame.Vector2(0, -self.radius * 0.8).rotate(self.rotation)
+        
+        cockpit_points = [
+            cockpit_pos + pygame.Vector2(-cockpit_width/2, -cockpit_length/2).rotate(self.rotation),
+            cockpit_pos + pygame.Vector2(cockpit_width/2, -cockpit_length/2).rotate(self.rotation),
+            cockpit_pos + pygame.Vector2(cockpit_width/2, cockpit_length/2).rotate(self.rotation),
+            cockpit_pos + pygame.Vector2(-cockpit_width/2, cockpit_length/2).rotate(self.rotation)
+        ]
+        
+        pygame.draw.polygon(screen, (50, 50, 50), cockpit_points)
+        pygame.draw.polygon(screen, (100, 200, 255), cockpit_points, 2)
 
     def update(self, dt):
         keys = pygame.key.get_pressed()
@@ -65,3 +160,30 @@ class Player(CircleShape, pygame.sprite.Sprite):
             shot = Shot(self.position, self.rotation, SHOT_RADIUS)
             shot.velocity = pygame.Vector2(0, 1).rotate(self.rotation) * PLAYER_SHOT_SPEED
             self.shot_timer -= SHOT_COOLDOWN
+
+    def check_collision(self, other):
+        # Vypočítáme vzdálenost mezi středy
+        distance = self.position.distance_to(other.position)
+        
+        # Upravená hitbox pro X-Wing
+        # Zohledňujeme křídla a trup
+        wing_length = self.radius * 1.5
+        body_radius = self.radius * 0.8
+        
+        # Kontrola kolize s tělem lodi
+        if distance < (body_radius + other.radius):
+            return True
+            
+        # Kontrola kolize s křídly
+        wing_points = [
+            self.position + pygame.Vector2(-wing_length, 0).rotate(self.rotation),
+            self.position + pygame.Vector2(wing_length, 0).rotate(self.rotation),
+            self.position + pygame.Vector2(0, -wing_length).rotate(self.rotation),
+            self.position + pygame.Vector2(0, wing_length).rotate(self.rotation)
+        ]
+        
+        for point in wing_points:
+            if point.distance_to(other.position) < other.radius:
+                return True
+                
+        return False
