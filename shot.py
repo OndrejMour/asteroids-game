@@ -7,7 +7,6 @@ class Shot(CircleShape, pygame.sprite.Sprite):
 
     def __init__(self, x, y, radius):
         CircleShape.__init__(self, x, y, radius)
-        pygame.sprite.Sprite.__init__(self)
         if self.containers:
             for container in self.containers:
                 container.add(self)
