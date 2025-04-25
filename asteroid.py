@@ -4,7 +4,7 @@ import random
 import math
 from constants import *
 
-class Asteroid(CircleShape, pygame.sprite.Sprite):
+class Asteroid(CircleShape):
     def __init__(self, x, y, radius):
         CircleShape.__init__(self, x, y, radius)
         self.position = pygame.Vector2(x, y)
